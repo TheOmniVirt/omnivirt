@@ -1,0 +1,21 @@
+CHANGES
+=======
+
+* Add icons
+* Add mac backend
+* Update README.md
+* Add readme
+* Debug instance create command
+* Add create instance function
+* Finalize instance list operation
+* Add instance service and windows handler
+* Tested load and delete
+* Add methods to load and delete images
+* Tested image on win
+* Modify image record format
+* Add gitignore
+* Cleanup codebase
+* Finalize image-download
+* Refactor project to use grpc
+* Initial Commit
+* Initial commit
