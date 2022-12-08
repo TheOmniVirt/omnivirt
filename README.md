@@ -18,7 +18,7 @@ git clone https://github.com/ZhengZhenyu/omnivirt.git && cd omnivirt
 Open a `Terminal` or `Powershell` Console with Administrative permission and run:
 
 ``` Shell
-Python3 setup.py install --user
+python3 setup.py install --user
 ```
 
 ### Run OmniVirt
