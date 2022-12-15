@@ -29,3 +29,8 @@ VM_STATE_MAP = {
     32769: 'Suspended',
     99: 'N/A'
     }
+
+OS_MAP = {
+    'Darwin': 'MacOS',
+    'Windows': 'Win'
+}

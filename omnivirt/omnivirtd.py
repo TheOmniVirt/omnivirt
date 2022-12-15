@@ -37,14 +37,12 @@ def config_logging(config):
         filename=log_file, level=log_level, filemode='a+')
 
 
-def init(config, LOG):
+def init(arch, config, LOG):
     work_dir = config.conf.get('default', 'work_dir')
     image_dir = os.path.join(work_dir, config.conf.get('default', 'image_dir'))
     instance_dir = os.path.join(work_dir, 'instances')
     instance_record_file = os.path.join(instance_dir, 'instances.json')
     img_record_file = os.path.join(image_dir, 'images.json')
-
-    host_arch = platform.uname().machine
 
     LOG.debug('Initializing OmniVirtd ...')
     LOG.debug('Checking for work directory ...')
@@ -69,7 +67,7 @@ def init(config, LOG):
 
     LOG.debug('Checking for image database ...')
     remote_img_resp = requests.get(IMG_URL, verify=False)
-    remote_imgs = remote_img_resp.json()[constants.ARCH_MAP[host_arch]]
+    remote_imgs = remote_img_resp.json()[arch]
     if not os.path.exists(img_record_file):
         images = {}
         for name, path in remote_imgs.items():
@@ -86,13 +84,13 @@ def init(config, LOG):
         }
         utils.save_json_data(img_record_file, image_body)
 
-def serve(CONF, LOG):
+def serve(arch, host_os, CONF, LOG):
     '''
     Run the Omnivirtd Service
     '''
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    images_pb2_grpc.add_ImageGrpcServiceServicer_to_server(imager_service.ImagerService(CONF), server)
-    instances_pb2_grpc.add_InstanceGrpcServiceServicer_to_server(instance_service.InstanceService(CONF), server)
+    images_pb2_grpc.add_ImageGrpcServiceServicer_to_server(imager_service.ImagerService(arch, host_os, CONF), server)
+    instances_pb2_grpc.add_InstanceGrpcServiceServicer_to_server(instance_service.InstanceService(arch, host_os, CONF), server)
     server.add_insecure_port('[::]:50052')
     server.start()
     LOG.debug('OmniVirtd Service Started ...')
@@ -102,14 +100,33 @@ def serve(CONF, LOG):
 
 if __name__ == '__main__':
     try:
-        CONF = objs.Conf('.\\omnivirt.conf')
+        host_arch_raw = platform.uname().machine
+        host_os_raw = platform.uname().system
+
+        host_arch = constants.ARCH_MAP[host_arch_raw]
+        host_os = constants.OS_MAP[host_os_raw]
+
+        if len(sys.argv) < 2:
+
+            if constants.OS_MAP[host_os] == 'MacOS':
+                conf_file = './omnivirt.conf'
+                logo_file = './favicon.png'
+            elif constants.OS_MAP[host_os] == 'Win':
+                conf_file = '.\\omnivirt.conf'
+                logo_file = '.\\favicon.png'
+        
+        else:
+            conf_file = sys.argv[1]
+            logo_file = sys.argv[2]
+
+        CONF = objs.Conf(conf_file)
         
         config_logging(CONF)
         LOG = logging.getLogger(__name__)
 
-        init(CONF, LOG)
+        init(host_arch, CONF, LOG)
 
-        logo = PIL.Image.open('.\\favicon.png')
+        logo = PIL.Image.open(logo_file)
 
         def on_clicked(icon, item):
             icon.stop()
@@ -122,7 +139,7 @@ if __name__ == '__main__':
         print('Error: ' + str(e))
     else:
         LOG.debug('Starting Service ...')
-        grpc_server = serve(CONF, LOG)
+        grpc_server = serve(host_arch, host_os, CONF, LOG)
         icon.run()
         grpc_server.stop(None)
         sys.exit(0)
