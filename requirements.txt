@@ -3,6 +3,7 @@ configparser
 dnspython
 grpcio
 grpcio-tools
+pkg-config
 libvirt-python
 lxml
 os-win
@@ -19,5 +20,5 @@ protobuf
 pystray
 PyYAML
 six
-urllib
+urllib3
 wget
