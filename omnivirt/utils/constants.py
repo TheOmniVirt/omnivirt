@@ -17,7 +17,7 @@ IMAGE_STATUS_READY = 'Ready'
 IMAGE_LOAD_SUPPORTED_TYPES = ['qcow2.xz']
 
 ARCH_MAP = {
-    'AMD64': 'x86_64',
+    'x86_64': 'x86_64',
     'arm64': 'aarch64'
 }
 
