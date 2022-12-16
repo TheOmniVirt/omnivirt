@@ -4,8 +4,8 @@ import subprocess
 class QemuDriver(object):
 
     def __init__(self) -> None:
-        self.qemu_bin = '/opt/homebrew/bin/qemu-system-aarch64'
-        self.uefi_file = '/opt/homebrew/Cellar/qemu/7.1.0/share/qemu/edk2-aarch64-code.fd'
+        self.qemu_bin = '/opt/homebrew/bin/qemu-system-x86_64'
+        self.uefi_file = '/opt/homebrew/Cellar/qemu/7.1.0/share/qemu/edk2-x86_64-code.fd'
         self.uefi_params = ',if=pflash,format=raw,readonly=on'
     
     def create_vm(self, vm_name, vm_uuid, vm_mac, vm_root_disk):
