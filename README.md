@@ -12,13 +12,34 @@ OmniVirt currently support Windows platform.
 
 Clone the project:
 ``` Shell
-git clone https://github.com/ZhengZhenyu/omnivirt.git && cd omnivirt
+git clone https://github.com/TheOmniVirt/omnivirt.git && cd omnivirt
 ```
 
 Open a `Terminal` or `Powershell` Console with Administrative permission and run:
 
 ``` Shell
 Python3 setup.py install --user
+```
+
+### Install on MacOS x86_64
+
+Clone the project:
+``` Shell
+git clone https://github.com/TheOmniVirt/omnivirt.git && cd omnivirt
+```
+
+Open a `Terminal` or `Powershell` Console with Administrative permission and run:
+
+``` Shell
+pip3 install -r requirements.txt
+```
+* Note: if there is persistant "libvirt-python" error, use homebrew instead
+``` Shell
+brew install libvirt
+```
+
+``` Shell
+python3 setup.py install --user
 ```
 
 ### Run OmniVirt
@@ -29,6 +50,10 @@ Open a `Terminal` or `Powershell` Console with Administrative permission and run
 
 ``` Shell
 python3 omnivirt/omnivirtd.py --config-file etc/omnivirt-win.conf
+```
+
+``` Shell
+python3 omnivirt/omnivirtd.py  etc/omnivirt-mac.conf etc/images/favicon.png
 ```
 
 #### OmniVirt CLI
