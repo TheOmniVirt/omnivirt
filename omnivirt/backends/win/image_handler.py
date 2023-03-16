@@ -2,6 +2,7 @@ import copy
 import lzma
 import wget
 import os
+import shutil
 import ssl
 
 from omnivirt.backends.win import powershell
@@ -80,7 +81,7 @@ class WinImageHandler(object):
 
         return 0
 
-    def load_and_transform(self, images, img_to_load, path, update=False):
+    def load_and_transform(self, images, img_to_load, path, fmt, update=False):
 
         if update:
             self._delete_image(images, img_to_load)
@@ -93,13 +94,17 @@ class WinImageHandler(object):
         images['local'][image.name] = image.to_dict()
         omni_utils.save_json_data(self.image_record_file, images)
 
-        # Decompress the image
-        self.LOG.debug(f'Decompressing image file: {path} ...')
-        qcow2_name = f'{img_to_load}.qcow2'
-        with open(path, 'rb') as pr, open(os.path.join(self.image_dir, qcow2_name), 'wb') as pw:
-            data = pr.read()
-            data_dec = lzma.decompress(data)
-            pw.write(data_dec)
+        if fmt == 'qcow2':
+            qcow2_name = f'{img_to_load}.qcow2'
+            shutil.copyfile(path, os.path.join(self.image_dir, qcow2_name))
+        else:
+            # Decompress the image
+            self.LOG.debug(f'Decompressing image file: {path} ...')
+            qcow2_name = f'{img_to_load}.qcow2'
+            with open(path, 'rb') as pr, open(os.path.join(self.image_dir, qcow2_name), 'wb') as pw:
+                data = pr.read()
+                data_dec = lzma.decompress(data)
+                pw.write(data_dec)
         
         # Convert the qcow2 img to vhdx
         vhdx_name = img_to_load + '.vhdx'

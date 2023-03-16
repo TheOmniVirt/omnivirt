@@ -1,180 +1,22 @@
 # OmniVirt
 
-## What is OmniVirt
+**OmniVirt**是由openEuler社区技术运营团队及基础设施团队孵化的开发者工具集，通过对主流桌面操作系统中的虚拟化技术(LXD、HyperV、Virtualization framework)等技术进行有机整合，使用openEuler社区官方发布的虚拟机、容器镜像，为开发者在Windows、MacOS、Linux上提供统一的开发资源(虚拟机、容器)发放和管理体验，提升主流桌面操作系统上openEuler开发环境使用的便利性和稳定性，有效提升开发者体验。
 
-OmniVirt is a lightweight and powerful virtualization management platform aimed to provide uniformed openEuler vm/container experience for Win/Mac/Linux users. 
+## 背景 & 简介
 
-## Usage
+主流桌面操作系统上提供相关开发资源(虚拟机、容器等)的便利性和稳定性是影响openEuler开发者体验的重要因素，尤其是对于对开发资源受限的个人及高校开发者openEuler开发体验影响更为明显。当前常见的虚拟机管理平台有诸多局限性，如VirtualBox需要下载体积庞大的ISO镜像，同时需要进行操作系统安装等相关操作，WSL无法提供真实的openEuler内核，绝大多数虚拟机管理软件目前对Apple Sillicon芯片支持尚不完善且众多软件需要付费等，这些都极大的降低了开发者的工作效率。
 
-OmniVirt currently support Windows platform.
+**OmniVirt**支持在Windows、MacOS及Linux(规划中)等主流桌面操作系统上提供方便、易用、统一体验的开发者工具集，硬件架构支持x86_64及Aarch64(包含Apple Sillicon系列芯片)；并支持各平台对应的虚拟化硬件加速能力，为开发者提供高性能的开发资源。**OmniVirt**支持使用openEuler社区发布的虚拟机、容器(规划中)镜像、openEuler社区提供的Daily Build镜像以及其他符合要求的自定义镜像，为开发者提供多种选择。
 
-### Install on Windows
+## 快速开始
 
-Clone the project:
-``` Shell
-git clone https://github.com/ZhengZhenyu/omnivirt.git && cd omnivirt
-```
+**OmniVirt** MacOS用户请参考[MacOS用户指导文档][1]
+**OmniVirt** Win用户请参考[Windows用户指导文档][2]
 
-Open a `Terminal` or `Powershell` Console with Administrative permission and run:
+## 开发者指导
 
-``` Shell
-Python3 setup.py install --user
-```
+**OmniVirt** 开发者指导请参考[OmniVirt开发者指导][3]
 
-### Run OmniVirt
-
-#### OmniVirtd Daemon
-
-Open a `Terminal` or `Powershell` Console with Administrative permission and run:
-
-``` Shell
-python3 omnivirt/omnivirtd.py --config-file etc/omnivirt-win.conf
-```
-
-#### OmniVirt CLI
-
-``` Shell
-python3 omnivirt/cli.py [command] [option]
-```
-
-OmniVirt CLI Currently supports actions to control images and instances, check the following details:
-
-Images
-------
-
-1. List available images:
-``` Shell
-python3 cli.py images
-
-+-----------+----------+--------------+
-|   Images  | Location |    Status    |
-+-----------+----------+--------------+
-| 22.03-LTS |  Remote  | Downloadable |
-|   21.09   |  Remote  | Downloadable |
-| 2203-load |  Local   |    Ready     |
-+-----------+----------+--------------+
-```
-There are two types of images: 1) Remote and 2) Local, only images with `Local` location and `Ready` status can be used to create instances. For remote images, you have to download it before use. You can also load pre-downloaded images to the system, please check the following commands for details.
-
-2. Download a remote image:
-``` Shell
-python3 cli.py download-image 22.03-LTS
-
-Downloading: 22.03-LTS, this might take a while, please check image status with "images" command.
-```
-
-As you can see, the downloading call is an async call, since the whole downloading process includes downloading, decompressing and transforming sub-processes, this might take up to 10 minutes according to the image size and network speed. While downloading, you can check the status of the image with image list command:
-
-``` Shell
-python3 cli.py images
-
-+-----------+----------+--------------+
-|   Images  | Location |    Status    |
-+-----------+----------+--------------+
-| 22.03-LTS |  Remote  | Downloadable |
-|   21.09   |  Remote  | Downloadable |
-| 22.03-LTS |  Local   | Downloading  |
-+-----------+----------+--------------+
-```
-
-When your newly downloaded image status turned into `Ready` status, then you are good to go:
-
-``` Shell
-python3 cli.py images
-
-+-----------+----------+--------------+
-|   Images  | Location |    Status    |
-+-----------+----------+--------------+
-| 22.03-LTS |  Remote  | Downloadable |
-|   21.09   |  Remote  | Downloadable |
-| 22.03-LTS |  Local   |    Ready     |
-+-----------+----------+--------------+
-```
-
-3. Load a local image
-
-User can also load pre-downloaded or custom images to the system, currently the supported format is `xxx.qcow2.xz`:
-
-``` Shell
-python3 cli.py load-image --path {image_file_path} IMAGE_NAME
-```
-
-For example:
-``` Shell
-python3 cli.py load-image --path D:\openEuler-22.03-LTS-x86_64.qcow2.xz 2203-load
-
-Loading: 2203-load, this might take a while, please check image status with "images" command.
-```
-The above command will load the `D:\openEuler-22.03-LTS-x86_64.qcow2.xz` file to the system and name it `2203-load`. Similar to download command, this command is also async, you can check loading status with:
-
-``` Shell
-python3 cli.py images
-
-+-----------+----------+--------------+
-|   Images  | Location |    Status    |
-+-----------+----------+--------------+
-| 22.03-LTS |  Remote  | Downloadable |
-|   21.09   |  Remote  | Downloadable |
-| 2203-load |  Local   |   Loading    |
-+-----------+----------+--------------+
-```
-
-When it turned to `Ready` status, you are good to go, the `loading` proress is much faster than the `downloading` process.
-``` Shell
-python3 cli.py images
-
-+-----------+----------+--------------+
-|   Images  | Location |    Status    |
-+-----------+----------+--------------+
-| 22.03-LTS |  Remote  | Downloadable |
-|   21.09   |  Remote  | Downloadable |
-| 2203-load |  Local   |     Ready    |
-+-----------+----------+--------------+
-```
-
-4. Delete image
-
-Remove an image from the system by:
-
-``` Shell
-python3 cli.py delete-image 2203-load
-
-Image: 2203-load has been successfully deleted.
-```
-
-Instances
----------
-
-1. List all exixting instances:
-``` Shell
-python3 cli.py list
-
-+----------+-----------+---------+---------------+
-|   Name   |   Image   |  State  |       IP      |
-+----------+-----------+---------+---------------+
-|   test1  | 2203-load | Running | 172.22.57.220 |
-+----------+-----------+---------+---------------+
-|   test2  | 2203-load | Running |      N/A      |
-+----------+-----------+---------+---------------+
-```
-
-Instances with `N/A` IP address means the IP address is not available yet, if the  `State` of the instance is `Running` then you should wait a while as the instance must be newly created and it takes serveral seconds before it can get an IP assigned.
-
-If the instance has an IP address, you can directly SSH to that instance:
-
-``` Shell
-ssh root@{instance_ip}
-```
-The default password for `root` user of openEuler instances is `openEuler12#$`.
-
-2. Create an instance:
-
-``` Shell
-python3 cli.py launch --image {image-name} {instance-name}
-```
-
-3. Delete instance:
-
-``` Shell
-python3 cli.py delete-instance {instance-name}
-```
+[1]: ./docs/mac-user-manual.md
+[2]: ./docs/win-user-manual.md
+[3]: ./docs/developer-manual.md

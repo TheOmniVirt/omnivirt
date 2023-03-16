@@ -1,7 +1,6 @@
 import logging
 import os
 
-from omnivirt.backends.win import instance_handler as win_instance_handler
 from omnivirt.grpcs.omnivirt_grpc import instances_pb2, instances_pb2_grpc
 from omnivirt.utils import utils
 
@@ -13,16 +12,23 @@ class InstanceService(instances_pb2_grpc.InstanceGrpcServiceServicer):
     The Instance GRPC Handler
     '''
 
-    def __init__(self, conf) -> None:
+    def __init__(self, arch, host_os, conf, svc_base_dir) -> None:
         self.CONF = conf
+        self.svc_base_dir = svc_base_dir
         self.work_dir = self.CONF.conf.get('default', 'work_dir')
         self.instance_dir = os.path.join(self.work_dir, 'instances')
         self.instance_record_file = os.path.join(self.instance_dir, 'instances.json')
-        self.image_dir = os.path.join(self.work_dir, self.CONF.conf.get('default', 'image_dir'))
+        self.image_dir = os.path.join(self.work_dir, 'images')
         self.img_record_file = os.path.join(self.image_dir, 'images.json')
-        # TODO: Use different backend for different OS
-        self.backend = win_instance_handler.WinInstanceHandler(
-            self.CONF, self.work_dir, self.instance_dir, self.image_dir, self.img_record_file, LOG)
+        if host_os == 'Win':
+            from omnivirt.backends.win import instance_handler as win_instance_handler
+            self.backend = win_instance_handler.WinInstanceHandler(
+                self.CONF, self.work_dir, self.instance_dir, self.image_dir, self.img_record_file, LOG)
+        elif host_os == 'MacOS':
+            from omnivirt.backends.mac import instance_handler as mac_instance_handler
+            self.backend = mac_instance_handler.MacInstanceHandler(
+                self.CONF, self.work_dir, self.instance_dir, self.image_dir,
+                self.img_record_file, LOG, self.svc_base_dir)
 
     def list_instances(self, request, context):
         LOG.debug(f"Get request to list instances ...")
@@ -53,9 +59,9 @@ class InstanceService(instances_pb2_grpc.InstanceGrpcServiceServicer):
             msg = f'Error: Instance with name {request.name} already exist, please specify another name.'
             return instances_pb2.CreateInstanceResponse(ret=2, msg=msg)
         
-        check_result = self.backend.check_names(request.name)
+        check_result = self.backend.check_names(request.name, all_instances)
         if check_result == 1:
-            msg = f'Error: Instance with name {request.name} already exist in exixting Hyper-V system, please specify another name.'
+            msg = f'Error: Instance with name {request.name} already exist in exixting Hyper-V or Qemu backend, please specify another name.'
             return instances_pb2.CreateInstanceResponse(ret=2, msg=msg)
 
         vm = self.backend.create_instance(
