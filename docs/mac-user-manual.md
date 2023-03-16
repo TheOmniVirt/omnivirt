@@ -83,6 +83,10 @@ brew install wget
         wget_dir = # wget的可执行文件路径，请参考上一步的内容进行配置
         qemu_dir = # qemu的可执行文件路径，请参考上一步的内容进行配置
         debug = True
+
+        [vm]
+        cpu_num = 1 # 配置虚拟机的CPU个数
+        memory = 1024 # 配置虚拟机的内存大小，单位为M，M1用户请勿配置超过2048
         ```
         完成编辑后保存退出
 
