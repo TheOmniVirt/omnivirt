@@ -1,3 +1,4 @@
+import argparse
 from concurrent import futures
 import grpc
 import logging
@@ -6,6 +7,8 @@ import PIL.Image
 import platform
 import pystray
 import requests
+import signal
+import subprocess
 import sys
 import time
 
@@ -18,6 +21,14 @@ from omnivirt.utils import utils
 
 
 IMG_URL = 'https://gitee.com/openeuler/omnivirt/raw/master/etc/supported_images.json'
+
+# Avoid create zombie children in MacOS and Linux
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('conf_file', help='Configuration file for the application', type=str)
+parser.add_argument('base_dir', help='The base work directory of the daemon')
+
 
 def config_logging(config):
     log_dir = config.conf.get('default', 'log_dir')
@@ -39,7 +50,7 @@ def config_logging(config):
 
 def init(arch, config, LOG):
     work_dir = config.conf.get('default', 'work_dir')
-    image_dir = os.path.join(work_dir, config.conf.get('default', 'image_dir'))
+    image_dir = os.path.join(work_dir, 'images')
     instance_dir = os.path.join(work_dir, 'instances')
     instance_record_file = os.path.join(instance_dir, 'instances.json')
     img_record_file = os.path.join(image_dir, 'images.json')
@@ -84,62 +95,54 @@ def init(arch, config, LOG):
         }
         utils.save_json_data(img_record_file, image_body)
 
-def serve(arch, host_os, CONF, LOG):
+def serve(arch, host_os, CONF, LOG, base_dir):
     '''
     Run the Omnivirtd Service
     '''
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    images_pb2_grpc.add_ImageGrpcServiceServicer_to_server(imager_service.ImagerService(arch, host_os, CONF), server)
-    instances_pb2_grpc.add_InstanceGrpcServiceServicer_to_server(instance_service.InstanceService(arch, host_os, CONF), server)
+    images_pb2_grpc.add_ImageGrpcServiceServicer_to_server(imager_service.ImagerService(arch, host_os, CONF, base_dir), server)
+    instances_pb2_grpc.add_InstanceGrpcServiceServicer_to_server(instance_service.InstanceService(arch, host_os, CONF, base_dir), server)
     server.add_insecure_port('[::]:50052')
     server.start()
     LOG.debug('OmniVirtd Service Started ...')
+
+    def term_handler(signum, frame):
+        pid = os.getpid()
+        os.killpg(os.getpgid(pid), signal.SIGKILL)
+
+    # Avoid create orphan children in MacOS and Linux
+    signal.signal(signal.SIGTERM, term_handler)
     
-    return server
+    while True:
+            time.sleep(1)
+
+def init_omnivirtd(conf, base_dir):
+    CONF = objs.Conf(conf)
+
+    config_logging(CONF)
+    LOG = logging.getLogger(__name__)
+
+    host_arch_raw = platform.uname().machine
+    host_os_raw = platform.uname().system
+
+    host_arch = constants.ARCH_MAP[host_arch_raw]
+    host_os = constants.OS_MAP[host_os_raw]
+
+    try:
+        init(host_arch, CONF, LOG)
+    except Exception as e:
+        LOG.debug('Error: ' + str(e))
+        return str(e)
+    else:
+        serve(host_arch, host_os, CONF, LOG, base_dir)
 
 
 if __name__ == '__main__':
+    args = parser.parse_args()
+    conf_file = args.conf_file
     try:
-        host_arch_raw = platform.uname().machine
-        host_os_raw = platform.uname().system
-
-        host_arch = constants.ARCH_MAP[host_arch_raw]
-        host_os = constants.OS_MAP[host_os_raw]
-
-        if len(sys.argv) < 2:
-
-            if constants.OS_MAP[host_os] == 'MacOS':
-                conf_file = './omnivirt.conf'
-                logo_file = './favicon.png'
-            elif constants.OS_MAP[host_os] == 'Win':
-                conf_file = '.\\omnivirt.conf'
-                logo_file = '.\\favicon.png'
-        
-        else:
-            conf_file = sys.argv[1]
-            logo_file = sys.argv[2]
-
-        CONF = objs.Conf(conf_file)
-        
-        config_logging(CONF)
-        LOG = logging.getLogger(__name__)
-
-        init(host_arch, CONF, LOG)
-
-        logo = PIL.Image.open(logo_file)
-
-        def on_clicked(icon, item):
-            icon.stop()
-        
-        icon = pystray.Icon('OmniVirt', logo, menu=pystray.Menu(
-            pystray.MenuItem('Exit OmniVirt', on_clicked)
-        ))
-
+        pass
     except Exception as e:
         print('Error: ' + str(e))
     else:
-        LOG.debug('Starting Service ...')
-        grpc_server = serve(host_arch, host_os, CONF, LOG)
-        icon.run()
-        grpc_server.stop(None)
-        sys.exit(0)
+        init_omnivirtd(conf_file, args.base_dir)

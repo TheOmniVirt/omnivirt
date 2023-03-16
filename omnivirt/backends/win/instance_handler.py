@@ -30,7 +30,7 @@ class WinInstanceHandler(object):
         vms = _vmops.list_instances()
         return vms
     
-    def check_names(self, name):
+    def check_names(self, name, all_instances):
         ret = _vmops.check_all_instance_names(name)
         return ret
     

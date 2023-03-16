@@ -1,3 +1,4 @@
+argparse
 click
 configparser
 dnspython
@@ -17,6 +18,7 @@ oslo.utils
 Pillow
 prettytable
 protobuf
+psutil
 pystray
 PyYAML
 six

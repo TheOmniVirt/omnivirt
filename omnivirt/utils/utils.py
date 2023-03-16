@@ -79,3 +79,16 @@ def catch_exception(func):
             raise exceptions.OmniVirtdNotAvailable
     
     return wrap
+
+def check_file_tail(file_name, to_check):
+    
+    ret = False
+    ret_fmt = None
+
+    for fmt in to_check:
+        if file_name.endswith(fmt):
+            ret = True
+            ret_fmt = fmt
+            break
+    
+    return ret, ret_fmt
