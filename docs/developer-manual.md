@@ -39,7 +39,7 @@ cd /path/to/OmniVirt
 安装项目依赖
 
 ``` Shell
-pip3 installer -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ### 构建
