@@ -46,7 +46,7 @@ brew install wget
 
 ## 安装OmniVirt
 
-**OmniVirt**当前支持MacOS Ventura, 支持Apple Silicon芯片版及x86芯片版，前往[OmniVirt最新版下载][1]下载MacOS版软件包并解压到期望的位置。
+**OmniVirt**当前支持MacOS Ventura, 支持Apple Silicon芯片版及x86芯片版，前往[OmniVirt最新版下载][2]下载MacOS版软件包并解压到期望的位置。
 
 解压后的目录包含以下文件：
 
